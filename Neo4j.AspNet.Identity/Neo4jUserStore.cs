@@ -23,14 +23,14 @@ namespace Neo4j.AspNet.Identity
         where TUser : IdentityUser, IUser<string>, new()
     {
         private bool _disposed;
-        private readonly IGraphClient _graphClient;
+        protected readonly IGraphClient _graphClient;
 
         public Neo4jUserStore(IGraphClient graphClient)
         {
             _graphClient = graphClient;
         }
 
-        private void ThrowIfDisposed()
+        protected void ThrowIfDisposed()
         {
             if (_disposed)
                 throw new ObjectDisposedException(GetType().Name);
@@ -38,7 +38,7 @@ namespace Neo4j.AspNet.Identity
 
         #region IUserLoginStore
 
-        public async Task AddLoginAsync(TUser user, UserLoginInfo login)
+        public virtual async Task AddLoginAsync(TUser user, UserLoginInfo login)
         {
             Throw.ArgumentException.IfNull(user, "user");
             Throw.ArgumentException.IfNull(login, "login");
@@ -54,21 +54,21 @@ namespace Neo4j.AspNet.Identity
             /// <summary>
             ///     Provider for the linked login, i.e. Facebook, Google, etc.
             /// </summary>
-            public string LoginProvider { get; set; }
+            public virtual string LoginProvider { get; set; }
 
             /// <summary>
             ///     User specific key for the login provider
             /// </summary>
-            public string ProviderKey { get; set; }
+            public virtual string ProviderKey { get; set; }
 
-            public UserLoginInfo ToUserLoginInfo()
+            public virtual UserLoginInfo ToUserLoginInfo()
             {
                 return new UserLoginInfo(LoginProvider, ProviderKey);
             }
         }
 
 
-        public async Task<TUser> FindAsync(UserLoginInfo login)
+        public virtual async Task<TUser> FindAsync(UserLoginInfo login)
         {
             Throw.ArgumentException.IfNull(login, "login");
             ThrowIfDisposed();
@@ -91,14 +91,14 @@ namespace Neo4j.AspNet.Identity
             return result.Combine();
         }
 
-        public async Task<IList<UserLoginInfo>> GetLoginsAsync(TUser user)
+        public virtual async Task<IList<UserLoginInfo>> GetLoginsAsync(TUser user)
         {
             Throw.ArgumentException.IfNull(user, "user");
             ThrowIfDisposed();
             return user.Logins as IList<UserLoginInfo>;
         }
 
-        public async Task RemoveLoginAsync(TUser user, UserLoginInfo login)
+        public virtual async Task RemoveLoginAsync(TUser user, UserLoginInfo login)
         {
             Throw.ArgumentException.IfNull(user, "user");
             Throw.ArgumentException.IfNull(login, "login");
@@ -106,7 +106,7 @@ namespace Neo4j.AspNet.Identity
             user.Logins.RemoveAll(x => x.LoginProvider == login.LoginProvider && x.ProviderKey == login.ProviderKey);
         }
 
-        public async Task CreateAsync(TUser user)
+        public virtual async Task CreateAsync(TUser user)
         {
             Throw.ArgumentException.IfNull(user, "user");
             Throw.ArgumentException.IfNull(user, "user");
@@ -118,7 +118,7 @@ namespace Neo4j.AspNet.Identity
                 .ExecuteWithoutResultsAsync();
         }
 
-        public async Task DeleteAsync(TUser user)
+        public virtual async Task DeleteAsync(TUser user)
         {
             Throw.ArgumentException.IfNull(user, "user");
             ThrowIfDisposed();
@@ -132,13 +132,13 @@ namespace Neo4j.AspNet.Identity
                 .ExecuteWithoutResultsAsync();
         }
 
-        public async Task<TUser> FindByIdAsync(object userId)
+        public virtual async Task<TUser> FindByIdAsync(object userId)
         {
             Throw.ArgumentException.IfNull(userId, "userId");
             return await FindByIdAsync(userId.ToString());
         }
 
-        public async Task<TUser> FindByIdAsync(string userId)
+        public virtual async Task<TUser> FindByIdAsync(string userId)
         {
             Throw.ArgumentException.IfNull(userId, "userId");
             ThrowIfDisposed();
@@ -166,11 +166,11 @@ namespace Neo4j.AspNet.Identity
         private class FindUserResult<T> 
             where T : IdentityUser, new()
         {
-            public T User { private get; set; } 
-            public IEnumerable<Node<Neo4jUserLoginInfo>> Logins { private get; set; }
-            public IEnumerable<Node<IdentityUserClaim>> Claims { private get; set; }
+            public virtual T User { private get; set; } 
+            public virtual IEnumerable<Node<Neo4jUserLoginInfo>> Logins { private get; set; }
+            public virtual IEnumerable<Node<IdentityUserClaim>> Claims { private get; set; }
 
-            public T Combine()
+            public virtual T Combine()
             {
                 var output = User;
                 if (Logins != null)
@@ -183,7 +183,7 @@ namespace Neo4j.AspNet.Identity
 
 
 
-        public async Task<TUser> FindByNameAsync(string userName)
+        public virtual async Task<TUser> FindByNameAsync(string userName)
         {
             Throw.ArgumentException.IfNull(userName, "userName");
             ThrowIfDisposed();
@@ -223,7 +223,7 @@ namespace Neo4j.AspNet.Identity
             return findUserResult.Combine();
         }
 
-        public async Task UpdateAsync(TUser user)
+        public virtual async Task UpdateAsync(TUser user)
         {
             Throw.ArgumentException.IfNull(user, "user");
             ThrowIfDisposed();
@@ -268,7 +268,7 @@ namespace Neo4j.AspNet.Identity
 
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             _disposed = true;
         }
@@ -277,7 +277,7 @@ namespace Neo4j.AspNet.Identity
 
         #region IUserClaimStore
 
-        public async Task AddClaimAsync(TUser user, Claim claim)
+        public virtual async Task AddClaimAsync(TUser user, Claim claim)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -293,7 +293,7 @@ namespace Neo4j.AspNet.Identity
             }
         }
 
-        public async Task<IList<Claim>> GetClaimsAsync(TUser user)
+        public virtual async Task<IList<Claim>> GetClaimsAsync(TUser user)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -303,7 +303,7 @@ namespace Neo4j.AspNet.Identity
             return result;
         }
 
-        public async Task RemoveClaimAsync(TUser user, Claim claim)
+        public virtual async Task RemoveClaimAsync(TUser user, Claim claim)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -317,7 +317,7 @@ namespace Neo4j.AspNet.Identity
 
         #region IUserRoleStore
 
-        public async Task AddToRoleAsync(TUser user, string roleName)
+        public virtual async Task AddToRoleAsync(TUser user, string roleName)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -329,7 +329,7 @@ namespace Neo4j.AspNet.Identity
             //CDS: Update DB???
         }
 
-        public async Task<IList<string>> GetRolesAsync(TUser user)
+        public virtual async Task<IList<string>> GetRolesAsync(TUser user)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -338,7 +338,7 @@ namespace Neo4j.AspNet.Identity
             return user.Roles;
         }
 
-        public async Task<bool> IsInRoleAsync(TUser user, string roleName)
+        public virtual async Task<bool> IsInRoleAsync(TUser user, string roleName)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -347,7 +347,7 @@ namespace Neo4j.AspNet.Identity
             return user.Roles.Contains(roleName, StringComparer.InvariantCultureIgnoreCase);
         }
 
-        public async Task RemoveFromRoleAsync(TUser user, string roleName)
+        public virtual async Task RemoveFromRoleAsync(TUser user, string roleName)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -362,7 +362,7 @@ namespace Neo4j.AspNet.Identity
 
         #region IUserPasswordStore
 
-        public async Task<string> GetPasswordHashAsync(TUser user)
+        public virtual async Task<string> GetPasswordHashAsync(TUser user)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -371,7 +371,7 @@ namespace Neo4j.AspNet.Identity
             return user.PasswordHash;
         }
 
-        public async Task<bool> HasPasswordAsync(TUser user)
+        public virtual async Task<bool> HasPasswordAsync(TUser user)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -380,7 +380,7 @@ namespace Neo4j.AspNet.Identity
             return user.PasswordHash != null;
         }
 
-        public async Task SetPasswordHashAsync(TUser user, string passwordHash)
+        public virtual async Task SetPasswordHashAsync(TUser user, string passwordHash)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -394,7 +394,7 @@ namespace Neo4j.AspNet.Identity
 
         #region IUserSecurityStampStore
 
-        public async Task<string> GetSecurityStampAsync(TUser user)
+        public virtual async Task<string> GetSecurityStampAsync(TUser user)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -403,7 +403,7 @@ namespace Neo4j.AspNet.Identity
             return user.SecurityStamp;
         }
 
-        public async Task SetSecurityStampAsync(TUser user, string stamp)
+        public virtual async Task SetSecurityStampAsync(TUser user, string stamp)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -417,7 +417,7 @@ namespace Neo4j.AspNet.Identity
 
         #region IUserEmailStore
 
-        public async Task<TUser> FindByEmailAsync(string email)
+        public virtual async Task<TUser> FindByEmailAsync(string email)
         {
             ThrowIfDisposed();
 
@@ -432,7 +432,7 @@ namespace Neo4j.AspNet.Identity
             return user;
         }
 
-        public async Task<string> GetEmailAsync(TUser user)
+        public virtual async Task<string> GetEmailAsync(TUser user)
         {
             ThrowIfDisposed();
 
@@ -446,68 +446,68 @@ namespace Neo4j.AspNet.Identity
             return dbUser == null ? null : dbUser.Email;
         }
 
-        public async Task<bool> GetEmailConfirmedAsync(TUser user)
+        public virtual async Task<bool> GetEmailConfirmedAsync(TUser user)
         {
             throw new NotImplementedException();
         }
 
-        public async Task SetEmailAsync(TUser user, string email)
+        public virtual async Task SetEmailAsync(TUser user, string email)
         {
             throw new NotImplementedException();
         }
 
-        public async Task SetEmailConfirmedAsync(TUser user, bool confirmed)
+        public virtual async Task SetEmailConfirmedAsync(TUser user, bool confirmed)
         {
             throw new NotImplementedException();
         }
 
         #endregion
 
-        public async Task<DateTimeOffset> GetLockoutEndDateAsync(TUser user)
+        public virtual async Task<DateTimeOffset> GetLockoutEndDateAsync(TUser user)
         {
             return DateTimeOffset.UtcNow;
         }
 
-        public async Task SetLockoutEndDateAsync(TUser user, DateTimeOffset lockoutEnd)
+        public virtual async Task SetLockoutEndDateAsync(TUser user, DateTimeOffset lockoutEnd)
         {
             
         }
 
-        public async Task<int> IncrementAccessFailedCountAsync(TUser user)
+        public virtual async Task<int> IncrementAccessFailedCountAsync(TUser user)
         {
             return 0;
         }
 
-        public async Task ResetAccessFailedCountAsync(TUser user)
+        public virtual async Task ResetAccessFailedCountAsync(TUser user)
         {
         }
 
-        public async Task<int> GetAccessFailedCountAsync(TUser user)
+        public virtual async Task<int> GetAccessFailedCountAsync(TUser user)
         {
             return 0;
         }
 
-        public async Task<bool> GetLockoutEnabledAsync(TUser user)
+        public virtual async Task<bool> GetLockoutEnabledAsync(TUser user)
         {
             return false;
         }
 
-        public async Task SetLockoutEnabledAsync(TUser user, bool enabled)
+        public virtual async Task SetLockoutEnabledAsync(TUser user, bool enabled)
         {
             return;
         }
 
-        public async Task SetTwoFactorEnabledAsync(TUser user, bool enabled)
+        public virtual async Task SetTwoFactorEnabledAsync(TUser user, bool enabled)
         {
             
         }
 
-        public async Task<bool> GetTwoFactorEnabledAsync(TUser user)
+        public virtual async Task<bool> GetTwoFactorEnabledAsync(TUser user)
         {
             return false;
         }
 
-        public async Task SetPhoneNumberAsync(TUser user, string phoneNumber)
+        public virtual async Task SetPhoneNumberAsync(TUser user, string phoneNumber)
         {
             Throw.ArgumentException.IfNull(user, "user");
             Throw.ArgumentException.IfNull(phoneNumber, "phoneNumber");
@@ -515,19 +515,19 @@ namespace Neo4j.AspNet.Identity
             user.PhoneNumber = phoneNumber;
         }
 
-        public async Task<string> GetPhoneNumberAsync(TUser user)
+        public virtual async Task<string> GetPhoneNumberAsync(TUser user)
         {
             Throw.ArgumentException.IfNull(user, "user");
             return user.PhoneNumber;
         }
 
-        public async Task<bool> GetPhoneNumberConfirmedAsync(TUser user)
+        public virtual async Task<bool> GetPhoneNumberConfirmedAsync(TUser user)
         {
             Throw.ArgumentException.IfNull(user, "user");
             return user.PhoneNumberConfirmed;
         }
 
-        public async Task SetPhoneNumberConfirmedAsync(TUser user, bool confirmed)
+        public virtual async Task SetPhoneNumberConfirmedAsync(TUser user, bool confirmed)
         {
             Throw.ArgumentException.IfNull(user, "user");
             user.PhoneNumberConfirmed = confirmed;

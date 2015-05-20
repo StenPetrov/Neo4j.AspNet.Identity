@@ -27,9 +27,11 @@
         public string PhoneNumber { get; set; }
         public bool PhoneNumberConfirmed { get; set; }
         public virtual string PasswordHash { get; set; }
-        public virtual string SecurityStamp { get; set; }
+        public virtual string SecurityStamp { get; set; } 
         public virtual string Email { get; set; }
         public virtual List<string> Roles { get; set; }
+
+        public int FailedAccessCount { get; set; }
 
         [JsonIgnore]
         public virtual List<IdentityUserClaim> Claims { get; set; }

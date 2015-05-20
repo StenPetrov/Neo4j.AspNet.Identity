@@ -12,7 +12,7 @@ namespace Neo4j.AspNet.Identity
 {
     public class UserStore<TUser> : IUserLoginStore<TUser>, IUserClaimStore<TUser>, IUserRoleStore<TUser>,
        IUserPasswordStore<TUser>, IUserSecurityStampStore<TUser>, IUserStore<TUser>, IUserEmailStore<TUser>,
-       IUserPhoneNumberStore<TUser>, IUserTwoFactorStore<TUser, string>
+       IUserPhoneNumberStore<TUser>, IUserTwoFactorStore<TUser, string>, IUserLockoutStore<TUser, string>
        where TUser : IdentityUser
     {
         private GraphClient db;
@@ -356,7 +356,7 @@ namespace Neo4j.AspNet.Identity
                 throw new ObjectDisposedException(GetType().Name);
         }
 
-        public Task<string> GetPhoneNumberAsync(TUser user)
+        public virtual Task<string> GetPhoneNumberAsync(TUser user)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -365,7 +365,7 @@ namespace Neo4j.AspNet.Identity
             return Task.FromResult(user.PhoneNumber);
         }
 
-        public Task<bool> GetPhoneNumberConfirmedAsync(TUser user)
+        public virtual Task<bool> GetPhoneNumberConfirmedAsync(TUser user)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -373,7 +373,7 @@ namespace Neo4j.AspNet.Identity
             return Task.FromResult(user.PhoneNumberConfirmed);
         }
 
-        public async Task SetPhoneNumberAsync(TUser user, string phoneNumber)
+        public virtual async Task SetPhoneNumberAsync(TUser user, string phoneNumber)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -383,7 +383,7 @@ namespace Neo4j.AspNet.Identity
             await UpdateAsync(user);
         }
 
-        public async Task SetPhoneNumberConfirmedAsync(TUser user, bool confirmed)
+        public virtual async Task SetPhoneNumberConfirmedAsync(TUser user, bool confirmed)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -393,14 +393,49 @@ namespace Neo4j.AspNet.Identity
             await UpdateAsync(user);
         }
 
-        public Task<bool> GetTwoFactorEnabledAsync(TUser user)
+        public virtual Task<bool> GetTwoFactorEnabledAsync(TUser user)
         {
             return Task.FromResult(false);
         }
 
-        public Task SetTwoFactorEnabledAsync(TUser user, bool enabled)
+        public virtual Task SetTwoFactorEnabledAsync(TUser user, bool enabled)
         { 
             return Task.FromResult(0);
+        }
+
+        public virtual Task<int> GetAccessFailedCountAsync(TUser user)
+        {
+            return Task.FromResult(user.FailedAccessCount);
+        }
+
+        public virtual Task<bool> GetLockoutEnabledAsync(TUser user)
+        {
+            return Task.FromResult(user.FailedAccessCount > 0);
+        }
+
+        public virtual Task<DateTimeOffset> GetLockoutEndDateAsync(TUser user)
+        {
+            return Task.FromResult(DateTimeOffset.UtcNow);
+        }
+
+        public virtual Task<int> IncrementAccessFailedCountAsync(TUser user)
+        {
+            return Task.FromResult(user.FailedAccessCount++);
+        }
+
+        public virtual async Task ResetAccessFailedCountAsync(TUser user)
+        {
+            user.FailedAccessCount = 0; 
+        }
+
+        public virtual async Task SetLockoutEnabledAsync(TUser user, bool enabled)
+        {
+             
+        }
+
+        public virtual async Task SetLockoutEndDateAsync(TUser user, DateTimeOffset lockoutEnd)
+        {
+             
         }
     }
 
